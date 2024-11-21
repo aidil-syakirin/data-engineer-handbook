@@ -1,4 +1,4 @@
--- select * from actor_films;
+-- select * from actor_films where year = 1970;
 
 -- select min(year) from actor_films;
 
@@ -7,6 +7,11 @@
 -- 	votes integer,
 -- 	rating real,
 -- 	filmid text
+-- );
+
+-- create type films_in_a_year as (
+-- 	year integer,
+-- 	film films[]
 -- );
 
 -- create type quality_class as enum ('star','good','average','bad');
@@ -39,6 +44,7 @@ select
 					c.rating,
 					c.filmid
 						)::films]
+		
 		when c.film is not null then l.films || array[row( 
 					c.film,
 					c.votes,
@@ -53,7 +59,7 @@ select
 				when c.rating > 6 then 'average'
 				else 'bad'
 		end::quality_class
-		else l.quality_class end as quality_clas,
+		else l.quality_class end as quality_class,
 	
 	coalesce(c.year, l.current_year + 1) as current_year
 
