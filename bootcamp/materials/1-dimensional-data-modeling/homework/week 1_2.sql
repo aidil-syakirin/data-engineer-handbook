@@ -8,7 +8,6 @@
 -- 	rating real,
 -- 	filmid text
 -- );
-
 -- create type quality_class as enum ('star','good','average','bad');
 -- drop table actors;
 -- create table if not exists actors (
@@ -19,20 +18,21 @@
 -- 	current_year integer
 -- );
 
--- insert into actors
+insert into actors
 
 with last_year as (
 	select * from actors
-	where current_year = 1969
+	where current_year = 1971
 ),
 	next_year as (
 	select * from actor_films
-	where year = 1970
+	where year = 1972
 ),
 	films_quality as(
 	select actorid, 
-	sum(rating) over()::numeric / count(rating) over () as avg_rating 
+	avg(rating) as avg_rating
 	from next_year
+	group by actorid
 	
 ),
 	films_agg as(
@@ -56,11 +56,12 @@ with last_year as (
 			c.year,
 			q.avg_rating
 	from films_agg c 
-	inner join films_quality q 
+	left join films_quality q
 	on c.actorid = q.actorid
 )
 
-	-- select * from films_agg order by actor
+-- select * from films_details order by actor
+	
 select 
 	coalesce(c.actor, l.actor) as actor,
 	coalesce(c.actorid, l.actorid) as actorid,
@@ -81,7 +82,6 @@ select
 	from films_details c 
 	full outer join last_year l 
 	on c.actor = l.actor
+	order by actor
 
-
-
--- select * from actors order by actor;
+select * from actors where actor = 'Alain Delon';
