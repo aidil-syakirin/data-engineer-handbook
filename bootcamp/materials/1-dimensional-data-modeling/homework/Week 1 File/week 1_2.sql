@@ -1,6 +1,6 @@
 -- select * from actor_films where year = 1970;
 
--- select min(year) from actor_films;
+-- select max(year) from actor_films;
 
 -- create type films as (
 -- 	film text,
@@ -15,6 +15,7 @@
 -- 	actorid text,
 -- 	films films[],
 -- 	quality_class quality_class,
+-- 	is_active boolean,
 -- 	current_year integer
 -- );
 
@@ -22,11 +23,11 @@ insert into actors
 
 with last_year as (
 	select * from actors
-	where current_year = 1971
+	where current_year = 1976
 ),
 	next_year as (
 	select * from actor_films
-	where year = 1972
+	where year = 1977
 ),
 	films_quality as(
 	select actorid, 
@@ -40,7 +41,7 @@ with last_year as (
 			c.actorid,
 			array_agg(row(  
 					c.film,
-					c.votes,
+					c.votes, 
 					c.rating,
 					c.filmid
 						)::films)				
@@ -77,6 +78,7 @@ select
 				else 'bad'
 		end::quality_class
 		else l.quality_class end as quality_class,
+	case when c.films is not null then true else false end as is_active,
 	coalesce(c.year, l.current_year + 1) as current_year
 
 	from films_details c 
