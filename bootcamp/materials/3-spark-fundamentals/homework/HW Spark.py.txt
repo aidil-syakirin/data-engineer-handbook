@@ -1,0 +1,300 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import expr, col 
+from pyspark.sql import functions as F
+spark = SparkSession.builder.appName("Jupyter").getOrCreate()
+spark.sql("SET spark.sql.catalog.my_catalog.uri=http://192.168.56.1:8181")
+spark
+
+#read the csv file and convert them into df type
+
+df_md = spark.read.option("header", "true").option("inferSchema", "true").csv("/home/iceberg/data/match_details.csv")
+df_m = spark.read.option("header", "true").option("inferSchema", "true").csv("/home/iceberg/data/matches.csv")
+df_mmp = spark.read.option("header", "true").option("inferSchema", "true").csv("/home/iceberg/data/medals_matches_players.csv")
+df_me = spark.read.option("header", "true").option("inferSchema", "true").csv("/home/iceberg/data/medals.csv")
+df_mp = spark.read.option("header", "true").option("inferSchema", "true").csv("/home/iceberg/data/maps.csv")
+
+# creating tables and populates them with the csv data
+
+# matches details
+
+spark.sql("""DROP TABLE IF EXISTS bootcamp.match_details_bucketed""")
+
+matchDetailsDDL = """
+CREATE TABLE IF NOT EXISTS bootcamp.match_details_bucketed (
+     match_id STRING,
+     player_gamertag STRING,
+     player_total_kills INTEGER,
+     player_total_deaths INTEGER
+ )
+ USING iceberg
+ PARTITIONED BY (bucket(4, match_id));
+"""
+spark.sql(matchDetailsDDL)
+
+df_md.filter("match_id is not null and player_gamertag is not null") \
+    .select("match_id", "player_gamertag", "player_total_kills", "player_total_deaths") \
+     .write.mode("overwrite") \
+   .bucketBy(4, "match_id").saveAsTable("bootcamp.match_details_bucketed")
+
+
+# matches table
+
+spark.sql("""DROP TABLE IF EXISTS bootcamp.matches_bucketed""")
+                        
+matchesDDL = """
+CREATE TABLE IF NOT EXISTS bootcamp.matches_bucketed (
+    match_id STRING,
+    mapid string,
+    is_team_game BOOLEAN,
+    playlist_id STRING,
+    completion_date TIMESTAMP
+ )
+ USING iceberg
+ PARTITIONED BY (completion_date, bucket(4, match_id));
+"""
+
+spark.sql(matchesDDL)
+
+# Break large dataset into smaller chunks
+processed_data = df_m.select("match_id", "mapid", "is_team_game", "playlist_id", "completion_date")
+
+# Process in batches if extremely large
+distinct_dates = processed_data.select("completion_date").distinct().collect()
+
+#iterate through distinct dates and process each partition
+for date_row in distinct_dates:
+    specific_date = date_row["completion_date"]
+    
+    (processed_data \
+    .filter(F.col("completion_date") == specific_date) \
+    .write.mode("append") \
+    .partitionBy("completion_date") \
+    .bucketBy(4, "match_id")  \
+    .saveAsTable("bootcamp.matches_bucketed"))
+
+
+
+
+# medal_maps_players table
+
+spark.sql("""DROP TABLE IF EXISTS bootcamp.me_ma_pl_bucketed""")
+memapldDDL = """
+CREATE TABLE IF NOT EXISTS bootcamp.me_ma_pl_bucketed (
+    match_id STRING,
+    player_gamertag STRING,
+    medal_id bigint,
+    count integer
+ )
+ USING iceberg
+ partitioned by (bucket(4,match_id));
+"""
+
+spark.sql(memapldDDL)
+
+df_mmp.filter("match_id is not null and player_gamertag is not null") \
+    .select("match_id", "player_gamertag", "medal_id", "count") \
+     .write.mode("overwrite") \
+     .bucketBy(4,"match_id") \
+   .saveAsTable("bootcamp.me_ma_pl_bucketed")
+
+# medals table
+
+spark.sql("""DROP TABLE IF EXISTS bootcamp.medals_bucketed""")
+medalsDDL = """
+CREATE TABLE IF NOT EXISTS bootcamp.medals_bucketed (
+    medal_id STRING,
+    name STRING
+ )
+ USING iceberg;
+"""
+
+spark.sql(medalsDDL)
+
+df_me.select("medal_id", "name") \
+     .write.mode("overwrite") \
+   .saveAsTable("bootcamp.medals_bucketed")
+
+
+# maps table
+
+spark.sql("""DROP TABLE IF EXISTS bootcamp.maps_bucketed""")
+mapsDDL = """
+CREATE TABLE IF NOT EXISTS bootcamp.maps_bucketed (
+    mapid STRING,
+    name STRING
+ )
+ USING iceberg;
+"""
+
+spark.sql(mapsDDL)
+
+df_mp.filter("name is not null") \
+    .select("mapid", "name") \
+     .write.mode("overwrite") \
+   .saveAsTable("bootcamp.maps_bucketed")
+
+#joinning all tables into a single table
+
+spark.conf.set("spark.sql.autoBroadcastJoinThreshold", "-1")
+
+bucketed_matches = spark.table("bootcamp.matches_bucketed").sort("match_id")
+bucketed_match_details = spark.table("bootcamp.match_details_bucketed").sort("match_id")
+bucketed_medal_match_players = spark.table("bootcamp.me_ma_pl_bucketed").sort("match_id")
+bucketed_medals = spark.table("bootcamp.medals_bucketed")
+bucketed_maps = spark.table("bootcamp.maps_bucketed")
+
+bucketedJoin = bucketed_matches.alias("m") \
+   .join(bucketed_match_details.alias("md"),F.col("m.match_id") == F.col("md.match_id")) \
+   .join(bucketed_medal_match_players.alias("mmp"), (F.col("md.match_id") == F.col("mmp.match_id")) & (F.col("md.player_gamertag") == F.col("mmp.player_gamertag")))  \
+   .join(F.broadcast(bucketed_medals).alias("me"), F.col("mmp.medal_id") == F.col("me.medal_id")) \
+   .join(F.broadcast(bucketed_maps).alias("mp"), F.col("m.mapid") == F.col("mp.mapid")) \
+   .select(
+       F.col("m.*"), 
+       F.col("md.player_gamertag"), 
+       F.col("md.player_total_kills"), 
+       F.col("mmp.medal_id"),
+       F.col("me.name").alias ("medal_name"), 
+       F.col("mmp.count").alias("medal_count"),
+       F.col("mp.name").alias("map_name")) \
+# .explain()
+
+bucketedJoin.createOrReplaceTempView("bucketed_result")
+# spark.sql("SELECT * FROM bucketed_result LIMIT 3").show()
+
+#Answering the questions
+
+# Which player averages the most kills per game?
+avgKillPerGame = bucketedJoin.distinct() \
+     .groupBy(F.col("player_gamertag")) \
+     .agg(F.avg(F.col("player_total_kills")).alias("avg_kills_per_match")) \
+     .orderBy((F.col("avg_kills_per_match")).desc())
+
+avgKillPerGame.show()
+
+ # Which playlist gets played the most?
+playlistCount = bucketedJoin.groupBy(F.col("playlist_id")) \
+  .agg(F.countDistinct(F.col("match_id")).alias("total_games_played")) \
+  .orderBy(F.countDistinct(F.col("match_id")).desc())
+
+playlistCount.show()
+
+# Which map gets played the most?
+mapCount = bucketedJoin.filter(F.col("map_name").isNotNull()) \
+    .groupBy(F.col("map_name"))  \
+    .agg(F.countDistinct(F.col("match_id")).alias("total_games")) \
+    .orderBy(F.col("total_games").desc())
+
+mapCount.show()
+
+# Which map do players get the most Killing Spree medals on?
+mapKSCount = bucketedJoin.distinct() \
+        .filter(F.col("medal_name") == "Killing Spree") \
+        .groupBy(F.col("map_name")) \
+        .agg(F.sum(F.col("medal_count")).alias("total_games")) \
+        .orderBy(F.col("total_games").desc())
+
+
+mapKSCount.show()
+
+#To check for file sizes before and after partitioning 
+
+spark.sql("""DROP TABLE IF EXISTS bootcamp.sorted_table_one""")
+DDL_one = """
+CREATE TABLE IF NOT EXISTS bootcamp.sorted_table_one (
+    match_id STRING,
+    mapid string,
+    is_team_game boolean,
+    playlist_id string,
+    completion_date timestamp,
+    player_gamertag string, 
+    player_total_kills integer,
+    medal_id bigint,
+    medal_name string,
+    medal_count integer,
+    map_name string
+ )
+ USING iceberg
+ partitioned by (mapid);
+"""
+
+spark.sql(DDL_one)
+
+spark.sql("""DROP TABLE IF EXISTS bootcamp.sorted_table_two""")
+DDL_two = """
+CREATE TABLE IF NOT EXISTS bootcamp.sorted_table_two (
+    match_id STRING,
+    mapid string,
+    is_team_game boolean,
+    playlist_id string,
+    completion_date timestamp,
+    player_gamertag string, 
+    player_total_kills integer,
+    medal_id bigint,
+    medal_name string,
+    medal_count integer,
+    map_name string
+ )
+ USING iceberg
+ partitioned by (playlist_id);
+"""
+
+spark.sql(DDL_two)
+
+spark.sql("""DROP TABLE IF EXISTS bootcamp.unsorted_table""")
+DDL_one = """
+CREATE TABLE IF NOT EXISTS bootcamp.unsorted_table (
+    match_id STRING,
+    mapid string,
+    is_team_game boolean,
+    playlist_id string,
+    completion_date timestamp,
+    player_gamertag string, 
+    player_total_kills integer,
+    medal_id bigint,
+    medal_name string,
+    medal_count integer,
+    map_name string
+ )
+ USING iceberg;
+"""
+
+spark.sql(DDL_one)
+
+# populating the created tables with the files
+
+#sort by mapid
+sorted_maps = bucketedJoin.repartition(10, F.col("completion_date")) \
+                .sortWithinPartitions(F.col("mapid"))
+
+#sort by player_gamertag
+sorted_player = bucketedJoin.repartition(10, F.col("completion_date")) \
+                .sortWithinPartitions(F.col("player_gamertag"))
+
+#unsorted as the control
+unsorted = bucketedJoin.repartition(10, F.col("completion_date"))
+
+sorted_maps.write.mode("overwrite").saveAsTable("bootcamp.sorted_table_one")
+
+sorted_player.write.mode("overwrite").saveAsTable("bootcamp.sorted_table_two")
+
+unsorted.write.mode("overwrite").saveAsTable("bootcamp.unsorted_table")
+
+#displaying the tables sizes, count for comparison
+
+%%sql
+    
+SELECT SUM(file_size_in_bytes) as size, COUNT(1) as num_files, 'sorted_maps' 
+FROM bootcamp.sorted_table_one.files
+
+UNION ALL
+    
+SELECT SUM(file_size_in_bytes) as size, COUNT(1) as num_files, 'sorted_playergamertag' 
+FROM bootcamp.sorted_table_two.files
+
+UNION ALL
+    
+SELECT SUM(file_size_in_bytes) as size, COUNT(1) as num_files, 'unsorted' 
+FROM bootcamp.unsorted_table.files
+
+
+                                                
