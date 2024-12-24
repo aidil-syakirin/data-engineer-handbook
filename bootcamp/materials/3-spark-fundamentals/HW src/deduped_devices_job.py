@@ -4,12 +4,12 @@ from pyspark.sql import SparkSession
 
 
 
-def do_deduped_devices_users(spark, dataframe):
+def do_deduped_devices_users(spark, df_devices, df_events):
     query = f"""
     with 
         devices_deduped as (
         select 	
-                row_number() over (partition by device_id) as row_num,
+                row_number() over (partition by device_id order by device_id) as row_num,
                 device_id,
                 browser_type
         from devices
@@ -26,7 +26,7 @@ def do_deduped_devices_users(spark, dataframe):
         
         today_deduped as (
         select 	
-                row_number() over (partition by user_id, device_id) as row_num,
+                row_number() over (partition by user_id, device_id order by user_id) as row_num,
                 user_id,
                 device_id,
                 event_time
@@ -50,7 +50,7 @@ def do_deduped_devices_users(spark, dataframe):
     
         device_today as (
         select 
-            row_number() over (partition by user_id, browser_type ) as row_num,
+            row_number() over (partition by user_id, browser_type order by user_id) as row_num,
             t.user_id,
             d.browser_type,
             t.event_time
@@ -62,12 +62,12 @@ def do_deduped_devices_users(spark, dataframe):
         select 
             user_id,
             browser_type,
-            event_time
+            cast(event_time as string)
         from device_today
         where row_num = 1	
         """
-    dataframe[0].createOrReplaceTempView("devices")
-    dataframe[1].createOrReplaceTempView("events")
+    df_devices.createOrReplaceTempView("devices")
+    df_events.createOrReplaceTempView("events")
     return spark.sql(query)
 
 
