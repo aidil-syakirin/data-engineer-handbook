@@ -1,0 +1,9 @@
+instead of product that I loved to use, I will pick the product that I see maybe some experimentation can be done. It is Medium, an app for article sharing. 
+
+I initially registered for this app to increase my daily word count and try to gain unexpected and new knowledge. i really loved the daily articles compilation newsletter as it always remind me to read atleast 1 article a day.
+
+First experimentation will be introducing a free user article filter in the app homepage. The current homepage has only list of topics and as the ratio of paid and free articles quite large, I found myself always scrolling for a min to find any readable article. The test cell will be 50% as control, another 25% of free users and rest of 25% of paid users. The leading metrics will be daily users or visits and lagging metric will be churn rate of paid users. The hypothesis is as it is easier to filter out the free articles, the free users will keep coming and spent more times in the apps, meanwhile some paid users may feel it is not worth it to continue the subscription. 
+
+Second experimentation will be introducing some daily check-in for in-apps currency. The currency can be used to redeem paid articles or a month of subscription. This will be tested on users of early career people (20-30s) or high school age. Test cell will be 20% as a control, and split the rest to 4 bucket of 20% of different age ranges. This features will detect daily login or at least 2 minutes spend to record the login. The leading metrics will be daily visits and time spent, lagging metric will be conversion rate. My hypothesis is this feature will attract the specified age users and will increase the daily visits nad time spend on apps. It will also may increase the conversion rate as the users may subscribe if they visit daily and find themselves interested in paywall articles.
+
+Last experimentation,
