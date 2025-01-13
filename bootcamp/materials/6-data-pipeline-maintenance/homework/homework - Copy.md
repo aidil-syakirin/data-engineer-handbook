@@ -17,25 +17,25 @@ Aggregate engagement for investors | Business Analytic (BA) team | Data Engineer
 Aggregate growth for investors | Accounts team | Data Engineering (DE) team
 
 
-2. On-call schedule for DE team 
+# 2. On-call schedule for DE team 
 
-Pipeline Name | Week 1 | Week 2 | Week 3 | Week 4
-
+Pipeline Name | Week 1 | Week 2 | Week 3 | Week 4 
+--- | --- | --- | --- | ---
 Unit-level profit for experiments | No on-call as it is not production pipeline and any issue will be rectified during office hours 
-
+--- | --- | --- | --- | ---
 Daily growth for experiments | No on-call as it is not production pipeline and any issue will be rectified during office hours 
-
+--- | --- | --- | --- | ---
 Aggregate profit for investors | Aidil | Thiru | Choo | Spencer
-
+--- | --- | --- | --- | ---
 Aggregate engagement for investors | Aidil | Thiru | Choo | Spencer
-
+--- | --- | --- | --- | ---
 Aggregate growth for investors | Spencer | Choo | Aidil | Thiru
 
 Malaysia is one of the country that has the most public holidays per year, so if any team members is on holiday or on emergency leave, the next week members will cover accordingly. The team members also are from different races so hopefully no holiday clash.
 
-3. Runbook for the business critical pipelines
+# 3. Runbook for the business critical pipelines
 
-A. Aggregate Profit for Investors
+# A. Aggregate Profit for Investors
 
 Description: Aggregates company-wide profit metrics to generate quarterly reports for investors.
 
@@ -56,7 +56,7 @@ Escalation:
 Contact Primary: BA team
 Further Escalation: DE team member on duty 
 
-B. Aggregate Engagement for Investors
+# B. Aggregate Engagement for Investors
 
 Description: This pipeline processes user engagement metrics (e.g., clicks, time spent, and actions taken) to create aggregate reports shared with investors.
 
@@ -85,7 +85,7 @@ Escalation:
 Contact Primary: BA team
 Further Escalation: DE team member on duty 
 
-C. Aggregate Growth for Investors
+# C. Aggregate Growth for Investors
 
 Description: This pipeline computes company-wide growth metrics (e.g., revenue growth, user acquisition rates) for inclusion in investor presentations.
 
@@ -113,7 +113,7 @@ Escalation:
 Contact Primary: Accounts team
 Further Escalation: DE team member on duty 
 
-D. The potential pipeline issues
+# D. The potential pipeline issues
 
 Data Issues:
 Missing or outdated data from source systems.
