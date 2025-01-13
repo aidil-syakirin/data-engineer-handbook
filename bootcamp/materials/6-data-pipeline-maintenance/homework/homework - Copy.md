@@ -1,21 +1,19 @@
-##XYZ Tech Data Engineering (DE) team : Aidil, Spencer, Thiru, Choo
+## XYZ Tech Data Engineering (DE) team : Aidil, Spencer, Thiru, Choo
 
-1. Primary and secondary owners of the pipelines
+# 1. Primary and secondary owners of the pipelines
 
 Pipeline for experiments will be handled exclusively by DE team due to its projects status and will owned by a pair of DE team members. Profit and engagement pipeline will be handled primaly by Business Analytics (BA) team meanwhile growth pipeline will be by business analyst of Accounts team.  
 
 Pipeline Name | Primary Owner | Secondary Owner
-
-| | |
-
+--- | --- | --- 
 Unit-level profit for experiments | Aidil | Spencer
-
+--- | --- | --- 
 Daily growth for experiments | Thiru | Choo
-
+--- | --- | --- 
 Aggregate profit for investors | Business Analytic (BA) team | Data Engineering (DE) team
-
+--- | --- | --- 
 Aggregate engagement for investors | Business Analytic (BA) team | Data Engineering (DE) team
-
+--- | --- | --- 
 Aggregate growth for investors | Accounts team | Data Engineering (DE) team
 
 
