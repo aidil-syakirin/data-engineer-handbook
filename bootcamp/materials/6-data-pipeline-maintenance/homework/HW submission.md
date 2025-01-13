@@ -1,66 +1,38 @@
-# Week 5 Data Pipeline Maintenance
+# XYZ Tech Data Engineering (DE) team : Aidil, Spencer, Thiru, Choo
 
-### Homework
-
-Imagine you're in a group of 4 data engineers, you will be in charge of creating the following things:
-
-You are in charge of managing these 5 pipelines that cover the following business areas:
- 
- - Unit-level profit needed for experiments
- - Aggregate profit reported to investors
- - Aggregate growth reported to investors
- - Daily growth needed for experiments
- - Aggregate engagement reported to investors
-
-You are in charge of figuring out the following things:
-
-- Who is the primary and secondary owners of these pipelines?
-- What is an on-call schedule that is fair
-  - Think about holidays too!
-- Creating run books for all pipelines that report metrics to investors
-  - What could potentially go wrong in these pipelines?
-  - (you don't have to recommend a course of action though since this is an imagination exercise)
-  
-Create a markdown file submit it!
-
-XYZ Tech Data Engineering (DE) team : Aidil, Spencer, Thiru, Choo
-
-1. Primary and secondary owners of the pipelines
+## 1. Primary and secondary owners of the pipelines
 
 Pipeline for experiments will be handled exclusively by DE team due to its projects status and will owned by a pair of DE team members. Profit and engagement pipeline will be handled primaly by Business Analytics (BA) team meanwhile growth pipeline will be by business analyst of Accounts team.  
 
 Pipeline Name | Primary Owner | Secondary Owner
-
+--- | --- | --- 
 Unit-level profit for experiments | Aidil | Spencer
-
+--- | --- | --- 
 Daily growth for experiments | Thiru | Choo
-
+--- | --- | --- 
 Aggregate profit for investors | Business Analytic (BA) team | Data Engineering (DE) team
-
+--- | --- | --- 
 Aggregate engagement for investors | Business Analytic (BA) team | Data Engineering (DE) team
-
+--- | --- | --- 
 Aggregate growth for investors | Accounts team | Data Engineering (DE) team
 
 
-2. On-call schedule for DE team 
+## 2. On-call schedule for DE team 
 
-Pipeline Name | Week 1 | Week 2 | Week 3 | Week 4
-
-Unit-level profit for experiments | No on-call as it is not production pipeline and any issue will be rectified during office hours 
-
-Daily growth for experiments | No on-call as it is not production pipeline and any issue will be rectified during office hours 
-
+Pipeline Name | Week 1 | Week 2 | Week 3 | Week 4 
+--- | --- | --- | --- | ---
 Aggregate profit for investors | Aidil | Thiru | Choo | Spencer
-
+--- | --- | --- | --- | ---
 Aggregate engagement for investors | Aidil | Thiru | Choo | Spencer
-
+--- | --- | --- | --- | ---
 Aggregate growth for investors | Spencer | Choo | Aidil | Thiru
 
+Unit-level profit for experiments and Daily growth for experiments pipelines will have no on-call schedules as they are not production pipeline and any issue will be rectified during office hours 
 Malaysia is one of the country that has the most public holidays per year, so if any team members is on holiday or on emergency leave, the next week members will cover accordingly. The team members also are from different races so hopefully no holiday clash.
 
-3. Runbook for the business critical pipelines
+## 3. Runbook for the business critical pipelines
 
-A. Aggregate Profit for Investors
+### A. Aggregate Profit for Investors
 
 Description: Aggregates company-wide profit metrics to generate quarterly reports for investors.
 
@@ -81,7 +53,7 @@ Escalation:
 Contact Primary: BA team
 Further Escalation: DE team member on duty 
 
-B. Aggregate Engagement for Investors
+### B. Aggregate Engagement for Investors
 
 Description: This pipeline processes user engagement metrics (e.g., clicks, time spent, and actions taken) to create aggregate reports shared with investors.
 
@@ -110,7 +82,7 @@ Escalation:
 Contact Primary: BA team
 Further Escalation: DE team member on duty 
 
-C. Aggregate Growth for Investors
+### C. Aggregate Growth for Investors
 
 Description: This pipeline computes company-wide growth metrics (e.g., revenue growth, user acquisition rates) for inclusion in investor presentations.
 
@@ -138,7 +110,7 @@ Escalation:
 Contact Primary: Accounts team
 Further Escalation: DE team member on duty 
 
-D. The potential pipeline issues
+### D. The potential pipeline issues
 
 Data Issues:
 Missing or outdated data from source systems.
